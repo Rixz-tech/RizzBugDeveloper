@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rixz • Bug Menu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family: Inter, system-ui, sans-serif; background:#0b0f1a; color:#e5e7eb;}
+    .glass{background: rgba(255,255,255,.06); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,.08);}
+    .card{ border-radius: 22px; }
+    .btn{ display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.9rem 1.2rem; border-radius:18px; font-weight:600; transition: all .2s ease; cursor:pointer; }
+    .btn-accent{ background: linear-gradient(180deg,#a855f7,#7c3aed); }
+    .btn-danger{ background: linear-gradient(180deg,#ef4444,#dc2626); }
+    .chip{ width:120px; height:100px; border-radius:22px; padding:14px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:8px; background: rgba(255,255,255,.08); cursor:pointer; }
+    .input{ background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#e5e7eb; border-radius:16px; padding:14px; width:100%; }
+    .avatar{ width:170px; height:170px; border-radius:50%; overflow:hidden; border:5px solid #7c3aed; margin:auto; cursor:pointer; }
+    .avatar img{ width:100%; height:100%; object-fit:cover; }
+    .success-anim { animation: pop 0.6s ease forwards; display: inline-block; }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity:0; }
+      70% { transform: scale(1.2); opacity:1; }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="h-screen flex items-center justify-center">
+    <div class="bg-gray-800 p-8 rounded-lg shadow w-80 text-center">
+      <h1 class="text-2xl font-bold mb-4">🔐 Login</h1>
+      <input id="username" class="input mb-2" placeholder="Username">
+      <input id="password" type="password" class="input mb-4" placeholder="Password">
+      <button id="loginBtn" class="btn btn-accent w-full">Login</button>
+      <p id="loginError" class="text-red-400 text-sm mt-3 hidden">❌ Username / Password salah!</p>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <main id="mainApp" class="hidden max-w-xl mx-auto p-6">
+    <!-- Avatar -->
+    <div class="avatar mb-4" onclick="document.getElementById('logoFile').click()">
+      <img id="logo" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Placeholder_view_vector.svg" alt="avatar"/>
+    </div>
+    <input type="file" id="logoFile" accept="image/*" class="hidden"/>
+
+    <!-- Header -->
+    <section class="card glass p-6 text-center bg-gradient-to-r from-purple-600 to-fuchsia-600">
+      <h1 class="text-4xl font-extrabold">Rixz Developer</h1>
+      <p class="mt-2 text-lg opacity-90">Advanced Bug Menu System</p>
+      <p class="mt-1 text-sm opacity-80">IP : <span class="font-mono">158.140.163.91</span></p>
+    </section>
+
+    <!-- Panel -->
+    <section class="card glass p-6 mt-6">
+      <div class="space-y-6">
+        <div>
+          <label class="block mb-2 font-semibold">🎯 Target Number</label>
+          <input id="target" class="input" placeholder="Enter target number (62…)" />
+        </div>
+        <div>
+          <label class="block mb-2 font-semibold">⚡ Select Attack Type</label>
+          <div class="flex gap-3 flex-wrap">
+            <button class="chip">🧨<div>Force</div></button>
+            <button class="chip">⏳<div>Delay</div></button>
+            <button class="chip">💥<div>Crash</div></button>
+          </div>
+        </div>
+        <div>
+          <label class="block mb-2 font-semibold">❇️ Force Close Options</label>
+          <div class="grid gap-3">
+            <button class="btn btn-danger" id="btn-invisible">Send Bug To Target</button>
+            <button class="btn btn-danger" id="btn-heaven">Heaven SQL</button>
+            <button id="btn-support" class="btn btn-accent">📞 Support & Contact</button>
+          </div>
+        </div>
+        <div class="card glass p-4">
+          <div id="status">Ready to execute attack…</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let selectedMode = null;
+
+    // LOGIN pakai akun dari localStorage (bugUsers dibuat di admin.html)
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const users = JSON.parse(localStorage.getItem("bugUsers")) || [];
+
+      const found = users.find(u => u.username === user && u.password === pass);
+      if(found){
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("mainApp").classList.remove("hidden");
+      } else {
+        document.getElementById("loginError").classList.remove("hidden");
+      }
+    });
+
+    // Load logo dari localStorage kalau ada
+    window.addEventListener("load", () => {
+      const savedLogo = localStorage.getItem("customLogo");
+      if(savedLogo){
+        document.getElementById("logo").src = savedLogo;
+      }
+    });
+
+    // Pilih mode Force/Delay/Crash
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach(c => c.classList.remove("ring-2","ring-purple-500"));
+        chip.classList.add("ring-2","ring-purple-500");
+        selectedMode = chip.innerText.trim();
+      });
+    });
+
+    function simulateBug(action) {
+      const status = document.getElementById("status");
+      if(!selectedMode){
+        status.innerHTML = `<span class="text-yellow-400">⚠️ Please select attack type first!</span>`;
+        return;
+      }
+      let dots = 0;
+      status.textContent = `⚡ Running ${selectedMode} ${action}`;
+      const interval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        status.textContent = `⚡ Running ${selectedMode} ${action}` + ".".repeat(dots);
+      }, 400);
+      setTimeout(() => {
+        clearInterval(interval);
+        status.innerHTML = `✅ <span class="success-anim text-green-400 font-bold">${selectedMode} ${action} Success Bug!</span>`;
+      }, 3000);
+    }
+
+    // Tombol bug
+    document.getElementById("btn-invisible").addEventListener("click", () => simulateBug("Invisible"));
+    document.getElementById("btn-heaven").addEventListener("click", () => simulateBug("SQL"));
+
+    // Support tombol ke WhatsApp
+    document.getElementById('btn-support').addEventListener('click', () => {
+      window.open('https://wa.me/6283169654131', '_blank');
+    });
+
+    // Upload logo
+    document.getElementById("logoFile").addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = function(e){
+          document.getElementById("logo").src = e.target.result;
+          localStorage.setItem("customLogo", e.target.result);
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+</body>
+</html>
